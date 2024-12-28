@@ -15,14 +15,19 @@ from PIL import Image
 from torch.nn.attention import SDPBackend
 from tqdm import tqdm
 
-VARIANTS: List[str] = ["tiny", "small", "base_plus", "large"]
 
 variant_to_config_mapping: Dict[str, str] = {
     "tiny": "sam2_hiera_t.yaml",
     "small": "sam2_hiera_s.yaml",
     "base_plus": "sam2_hiera_b+.yaml",
     "large": "sam2_hiera_l.yaml",
+    "2.1/tiny": "2.1/sam2.1_hiera_t.yaml",
+    "2.1/small": "2.1/sam2.1_hiera_s.yaml",
+    "2.1/base_plus": "2.1/sam2.1_hiera_b+.yaml",
+    "2.1/large": "2.1/sam2.1_hiera_l.yaml",
 }
+
+VARIANTS: List[str] = list(variant_to_config_mapping.keys())
 
 
 def get_sdp_backends(dropout_p: float) -> Union[List[SDPBackend], SDPBackend]:

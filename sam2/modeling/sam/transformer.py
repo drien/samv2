@@ -5,20 +5,15 @@
 # LICENSE file in the root directory of this source tree.
 
 import math
-import warnings
 from functools import partial
 from typing import Tuple, Type
 
 import torch
 import torch.nn.functional as F
-from torch import Tensor, nn
+from torch import nn, Tensor
 
 from sam2.modeling.position_encoding import apply_rotary_enc, compute_axial_cis
 from sam2.modeling.sam2_utils import MLP
-from sam2.utils.misc import get_sdp_backends
-
-warnings.simplefilter(action="ignore", category=FutureWarning)
-# OLD_GPU, USE_FLASH_ATTN, MATH_KERNEL_ON = get_sdpa_settings()
 
 
 class TwoWayTransformer(nn.Module):
@@ -245,9 +240,7 @@ class Attention(nn.Module):
 
         dropout_p = self.dropout_p if self.training else 0.0
         # Attention
-
-        with torch.nn.attention.sdpa_kernel(get_sdp_backends(dropout_p)):
-            out = F.scaled_dot_product_attention(q, k, v, dropout_p=dropout_p)
+        out = F.scaled_dot_product_attention(q, k, v, dropout_p=dropout_p)
 
         out = self._recombine_heads(out)
         out = self.out_proj(out)
@@ -265,7 +258,7 @@ class RoPEAttention(Attention):
         # whether to repeat q rope to match k length
         # this is needed for cross-attention to memories
         rope_k_repeat=False,
-        feat_sizes=(32, 32),  # [w, h] for stride 16 feats at 512 resolution
+        feat_sizes=(64, 64),  # [w, h] for stride 16 feats at 1024 resolution
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -274,7 +267,9 @@ class RoPEAttention(Attention):
             compute_axial_cis, dim=self.internal_dim // self.num_heads, theta=rope_theta
         )
         freqs_cis = self.compute_cis(end_x=feat_sizes[0], end_y=feat_sizes[1])
-        self.freqs_cis = freqs_cis
+        self.freqs_cis = (
+            freqs_cis.to("cuda") if torch.cuda.is_available() else freqs_cis
+        )
         self.rope_k_repeat = rope_k_repeat
 
     def forward(
@@ -307,9 +302,8 @@ class RoPEAttention(Attention):
         )
 
         dropout_p = self.dropout_p if self.training else 0.0
-
-        with torch.nn.attention.sdpa_kernel(get_sdp_backends(dropout_p)):
-            out = F.scaled_dot_product_attention(q, k, v, dropout_p=dropout_p)
+        # Attention
+        out = F.scaled_dot_product_attention(q, k, v, dropout_p=dropout_p)
 
         out = self._recombine_heads(out)
         out = self.out_proj(out)
