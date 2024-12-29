@@ -5,7 +5,7 @@ from PIL import Image
 from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
 from sam2.build_sam import build_sam2, build_sam2_video_predictor
 from sam2.sam2_image_predictor import SAM2ImagePredictor
-from sam2.utils import download_weights
+from sam2.utils.download import download_weights
 from sam2.utils.misc import variant_to_config_mapping
 
 

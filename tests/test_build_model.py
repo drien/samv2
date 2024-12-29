@@ -2,7 +2,7 @@ import pytest
 import torch
 
 from sam2.build_sam import build_sam2
-from sam2.utils import download_weights
+from sam2.utils.download import download_weights
 from sam2.utils.misc import variant_to_config_mapping
 
 
