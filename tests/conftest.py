@@ -42,3 +42,31 @@ def video_predictor(download_weights):
         variant_to_config_mapping["tiny"],
         "./artifacts/sam2_hiera_tiny.pt",
     )
+
+
+@pytest.fixture
+def image_predictor21(download_weights) -> "SAM2ImagePredictor":
+    model = build_sam2(
+        variant_to_config_mapping["2.1/tiny"],
+        "./artifacts/sam2_hiera_tiny.pt",
+    )
+    image_predictor = SAM2ImagePredictor(model)
+    return image_predictor
+
+
+@pytest.fixture
+def mask_generator21(download_weights) -> "SAM2AutomaticMaskGenerator":
+    model = build_sam2(
+        variant_to_config_mapping["2.1/tiny"],
+        "./artifacts/sam2_hiera_tiny.pt",
+    )
+    mask_generator = SAM2AutomaticMaskGenerator(model)
+    return mask_generator
+
+
+@pytest.fixture
+def video_predictor21(download_weights):
+    return build_sam2_video_predictor(
+        variant_to_config_mapping["2.1/tiny"],
+        "./artifacts/sam2_hiera_tiny.pt",
+    )
